@@ -8,6 +8,8 @@ import WhyUniVah from "./components/home/WhyUniVah";
 import HowItWorks from "./components/home/HowItWorks";
 import SafetySection from "./components/home/SafetySection";
 import CTA from "./components/home/CTA";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function Home() {
   return (
@@ -30,6 +32,8 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
 
         <Footer />

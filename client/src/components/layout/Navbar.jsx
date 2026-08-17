@@ -30,11 +30,12 @@ function Navbar() {
             About
           </Link>
 
-          <Link
-            to="/login"
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Get Started
+          <Link to="/login" className="rounded-lg border border-blue-600 px-5 py-2.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50">
+            Login
+          </Link>
+
+          <Link to="/register" className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+           Register
           </Link>
         </div>
 
@@ -66,12 +67,12 @@ function Navbar() {
               About
             </Link>
 
-            <Link
-              to="/login"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-center font-semibold text-white"
-            >
-              Get Started
+            <Link to="/login" onClick={() => setIsOpen(false)} className="rounded-lg border border-blue-600 px-5 py-2.5 text-center font-semibold text-blue-600">
+              Login
+            </Link>
+
+            <Link to="/register" onClick={() => setIsOpen(false)} className="rounded-lg bg-blue-600 px-5 py-2.5 text-center font-semibold text-white">
+            Register
             </Link>
           </div>
         </div>

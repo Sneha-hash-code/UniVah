@@ -10,6 +10,9 @@ import SafetySection from "./components/home/SafetySection";
 import CTA from "./components/home/CTA";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import Profile from "./pages/Profile";
+import FindRide from "./pages/FindRide";
 
 function Home() {
   return (
@@ -34,6 +37,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/find-ride" element={<FindRide />} />
+          </Route>
         </Routes>
 
         <Footer />
@@ -41,5 +49,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
 export default App;

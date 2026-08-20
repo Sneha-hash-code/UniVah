@@ -16,9 +16,21 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     password: {
       type: String,
       required: true,
+    },
+
+    role: {
+      type: String,
+      enum: ["passenger", "driver"],
+      default: "passenger",
     },
   },
   {

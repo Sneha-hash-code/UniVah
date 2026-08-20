@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import Input from "../components/common/Input";
 
 function Login() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -44,6 +46,9 @@ function Login() {
       }
 
       console.log("Login successful:", data);
+
+      localStorage.setItem("token", data.token);
+      setUser(data.user);
 
       navigate("/");
     } catch (error) {

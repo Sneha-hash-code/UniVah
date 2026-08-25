@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { MapPin, CalendarDays, Users, Search } from "lucide-react";
+import {
+  MapPin,
+  CalendarDays,
+  Users,
+  Search,
+} from "lucide-react";
+
+import RideCard from "../components/rides/RideCard";
+import RideMap from "../components/rides/RideMap";
+import { locations } from "../data/locations";
 
 function FindRide() {
   const [formData, setFormData] = useState({
@@ -8,6 +17,8 @@ function FindRide() {
     date: "",
     seats: "1",
   });
+
+  const [searchedRoute, setSearchedRoute] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -19,8 +30,64 @@ function FindRide() {
   const handleSearch = (e) => {
     e.preventDefault();
 
+    const pickup = locations[formData.from];
+    const destination = locations[formData.to];
+
+    if (!pickup || !destination) {
+      return;
+    }
+
+    setSearchedRoute({
+      pickup,
+      destination,
+    });
+
     console.log("Searching for rides:", formData);
   };
+
+  const mockRides = [
+    {
+      id: 1,
+      driver: {
+        name: "Michael Johnson",
+        rating: 4.8,
+      },
+      from: "Ruston, LA",
+      to: "Monroe, LA",
+      date: "Aug 28, 2026",
+      departureTime: "7:30 AM",
+      availableSeats: 2,
+      price: 15,
+    },
+
+    {
+      id: 2,
+      driver: {
+        name: "Sarah Williams",
+        rating: 4.9,
+      },
+      from: "Ruston, LA",
+      to: "Shreveport, LA",
+      date: "Aug 28, 2026",
+      departureTime: "9:00 AM",
+      availableSeats: 3,
+      price: 20,
+    },
+
+    {
+      id: 3,
+      driver: {
+        name: "Daniel Carter",
+        rating: 4.7,
+      },
+      from: "Ruston, LA",
+      to: "Monroe, LA",
+      date: "Aug 28, 2026",
+      departureTime: "5:30 PM",
+      availableSeats: 1,
+      price: 12,
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12">
@@ -28,7 +95,11 @@ function FindRide() {
 
         {/* Header */}
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+            UNIVAH
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
             Find a Ride
           </h1>
 
@@ -57,19 +128,30 @@ function FindRide() {
                 <div className="relative">
                   <MapPin
                     size={20}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
+                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-blue-500"
                   />
 
-                  <input
+                  <select
                     id="from"
                     name="from"
-                    type="text"
                     value={formData.from}
                     onChange={handleChange}
-                    placeholder="Enter pickup location"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     required
-                  />
+                    className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="">
+                      Select pickup location
+                    </option>
+
+                    {Object.keys(locations).map((location) => (
+                      <option
+                        key={location}
+                        value={location}
+                      >
+                        {location}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -85,22 +167,32 @@ function FindRide() {
                 <div className="relative">
                   <MapPin
                     size={20}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
+                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-red-500"
                   />
 
-                  <input
+                  <select
                     id="to"
                     name="to"
-                    type="text"
                     value={formData.to}
                     onChange={handleChange}
-                    placeholder="Enter destination"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     required
-                  />
+                    className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="">
+                      Select destination
+                    </option>
+
+                    {Object.keys(locations).map((location) => (
+                      <option
+                        key={location}
+                        value={location}
+                      >
+                        {location}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-
             </div>
 
             {/* Date + Seats */}
@@ -127,8 +219,8 @@ function FindRide() {
                     type="date"
                     value={formData.date}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     required
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
               </div>
@@ -162,7 +254,6 @@ function FindRide() {
                   </select>
                 </div>
               </div>
-
             </div>
 
             {/* Search Button */}
@@ -173,21 +264,67 @@ function FindRide() {
               <Search size={20} />
               Find Rides
             </button>
-
           </form>
         </div>
+
+        {/* Route Map */}
+        {searchedRoute && (
+          <section className="mt-10">
+
+            <div className="mb-5">
+              <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+                Your Journey
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold text-slate-900">
+                {searchedRoute.pickup.name}
+                <span className="mx-2 text-slate-400">
+                  →
+                </span>
+                {searchedRoute.destination.name}
+              </h2>
+
+              <p className="mt-2 text-sm text-slate-500">
+                View the route and available rides below.
+              </p>
+            </div>
+
+            <RideMap
+              pickup={searchedRoute.pickup}
+              destination={searchedRoute.destination}
+            />
+          </section>
+        )}
 
         {/* Results Section */}
         <section className="mt-12">
 
-          <h2 className="text-2xl font-bold text-slate-900">
-            Available Rides
-          </h2>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-slate-900">
+              Available Rides
+            </h2>
 
-          <p className="mt-2 text-slate-500">
-            Search for a route to see available rides.
-          </p>
+            <p className="mt-2 text-slate-500">
+              Rides available around Ruston and nearby destinations.
+            </p>
+          </div>
 
+          <div className="grid gap-5 lg:grid-cols-2">
+
+            {mockRides.map((ride) => (
+              <RideCard
+                key={ride.id}
+                ride={ride}
+                onViewRide={(selectedRide) => {
+                  console.log(
+                    "Selected ride:",
+                    selectedRide
+                  );
+                }}
+              />
+            ))}
+
+          </div>
         </section>
 
       </div>

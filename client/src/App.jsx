@@ -13,6 +13,9 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Profile from "./pages/Profile";
 import FindRide from "./pages/FindRide";
+import RideDetails from "./pages/RideDetails";
+import OfferRide from "./pages/OfferRide";
+import MyRides from "./pages/MyRides";
 
 function Home() {
   return (
@@ -41,6 +44,9 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/find-ride" element={<FindRide />} />
+            <Route path="/ride/:id" element={<RideDetails />} />
+            <Route path="/offer-ride" element={<OfferRide />} />
+            <Route path= "/my-rides" element={<MyRides />} />
           </Route>
         </Routes>
 

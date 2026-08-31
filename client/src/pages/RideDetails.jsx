@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRide } from "../context/RideContext";
 import {
   ArrowLeft,
   CalendarDays,
@@ -13,6 +14,7 @@ import { Link } from "react-router-dom";
 import RideMap from "../components/rides/RideMap";
 
 function RideDetails() {
+  const { requestRide } = useRide();
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   // Temporary frontend data.
@@ -225,6 +227,33 @@ function RideDetails() {
               </div>
             </section>
 
+            {/* Payment */}
+            <section className="mt-8">
+              <h2 className="text-lg font-bold text-slate-900">Payment</h2>
+
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5">
+                <div>
+                  <p className="text-sm text-slate-500">Payment Method</p>
+
+                  <p className="mt-1 font-semibold text-slate-900">
+                    Cash on Delivery
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Pay the driver when your ride is completed.
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-xs text-slate-500">Amount</p>
+
+                  <p className="text-xl font-bold text-blue-600">
+                    ${ride.price}
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* Description */}
             <section className="mt-8">
               <h2 className="text-lg font-bold text-slate-900">
@@ -305,7 +334,13 @@ function RideDetails() {
 
                   <button
                     type="button"
-                    onClick={() => setRequestSent(true)}
+                    onClick={() => {
+                      requestRide(ride, {
+                        name: "Current User",
+                      });
+
+                      setRequestSent(true);
+                    }}
                     className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700"
                   >
                     Send Request
@@ -321,6 +356,26 @@ function RideDetails() {
                 <h2 className="mt-5 text-2xl font-bold text-slate-900">
                   Request Sent
                 </h2>
+                <div className="mt-5 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-left">
+                  <p className="text-sm font-semibold text-yellow-800">
+                    Ride Status
+                  </p>
+
+                  <p className="mt-1 text-sm text-yellow-700">
+                    Your request is pending. The driver will review and respond
+                    to your request.
+                  </p>
+                </div>
+
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
+                  <p className="text-sm font-semibold text-slate-700">
+                    Payment
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-600">
+                    Cash on Delivery — ${ride.price}
+                  </p>
+                </div>
 
                 <p className="mt-3 leading-6 text-slate-500">
                   Your request has been sent to{" "}

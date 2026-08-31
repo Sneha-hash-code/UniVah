@@ -4,11 +4,14 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import "./index.css";
+import { RideProvider } from "./context/RideContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
+      <RideProvider>
         <App />
+      </RideProvider>
     </AuthProvider>
   </StrictMode>
 );

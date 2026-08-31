@@ -16,6 +16,8 @@ import FindRide from "./pages/FindRide";
 import RideDetails from "./pages/RideDetails";
 import OfferRide from "./pages/OfferRide";
 import MyRides from "./pages/MyRides";
+import ManageRide from "./pages/ManageRide";
+import About from "./pages/About";
 
 function Home() {
   return (
@@ -47,6 +49,9 @@ function App() {
             <Route path="/ride/:id" element={<RideDetails />} />
             <Route path="/offer-ride" element={<OfferRide />} />
             <Route path= "/my-rides" element={<MyRides />} />
+            <Route path="/manage-ride/:id" element={<ManageRide />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/about" element={<About />} />
           </Route>
         </Routes>
 

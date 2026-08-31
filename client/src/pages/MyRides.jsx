@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  CalendarDays,
-  Car,
-  Clock3,
-  MapPin,
-  Users,
-} from "lucide-react";
+import { CalendarDays, Car, Clock3, MapPin, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function MyRides() {
@@ -94,13 +88,10 @@ function MyRides() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-12">
       <div className="mx-auto max-w-5xl">
-
         {/* Header */}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-600">
-              YOUR JOURNEYS
-            </p>
+            <p className="text-sm font-semibold text-blue-600">YOUR JOURNEYS</p>
 
             <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
               My Rides
@@ -140,7 +131,6 @@ function MyRides() {
 
         {/* Ride List */}
         <section className="mt-6">
-
           {activeRides.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
@@ -164,7 +154,6 @@ function MyRides() {
                 >
                   {/* Top */}
                   <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100">
                         {ride.role === "driver" ? (
@@ -200,34 +189,23 @@ function MyRides() {
                     >
                       {ride.status}
                     </span>
-
                   </div>
 
                   {/* Route */}
                   <div className="p-5 sm:p-6">
-
                     <div className="rounded-xl bg-slate-50 p-4">
-
                       <div className="flex gap-3">
                         <div className="flex flex-col items-center">
-                          <MapPin
-                            size={19}
-                            className="text-blue-600"
-                          />
+                          <MapPin size={19} className="text-blue-600" />
 
                           <div className="my-1.5 h-5 border-l border-dashed border-slate-300" />
 
-                          <MapPin
-                            size={19}
-                            className="text-red-500"
-                          />
+                          <MapPin size={19} className="text-red-500" />
                         </div>
 
                         <div className="space-y-5">
                           <div>
-                            <p className="text-xs text-slate-500">
-                              From
-                            </p>
+                            <p className="text-xs text-slate-500">From</p>
 
                             <p className="font-semibold text-slate-900">
                               {ride.from}
@@ -235,63 +213,45 @@ function MyRides() {
                           </div>
 
                           <div>
-                            <p className="text-xs text-slate-500">
-                              To
-                            </p>
+                            <p className="text-xs text-slate-500">To</p>
 
                             <p className="font-semibold text-slate-900">
                               {ride.to}
                             </p>
                           </div>
                         </div>
-
                       </div>
-
                     </div>
 
                     {/* Details */}
                     <div className="mt-5 grid gap-3 sm:grid-cols-4">
-
                       <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <CalendarDays
-                          size={17}
-                          className="text-blue-600"
-                        />
+                        <CalendarDays size={17} className="text-blue-600" />
                         {ride.date}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Clock3
-                          size={17}
-                          className="text-blue-600"
-                        />
+                        <Clock3 size={17} className="text-blue-600" />
                         {ride.time}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Users
-                          size={17}
-                          className="text-blue-600"
-                        />
+                        <Users size={17} className="text-blue-600" />
                         {ride.seats} seat
                         {ride.seats > 1 ? "s" : ""}
                       </div>
 
                       <div>
-                        <p className="text-xs text-slate-500">
-                          Payment
-                        </p>
+                        <p className="text-xs text-slate-500">Payment</p>
 
                         <p className="text-sm font-semibold text-slate-900">
                           ${ride.price} • COD
                         </p>
                       </div>
-
                     </div>
 
                     {/* Actions */}
                     <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
-
                       <Link
                         to={`/ride/${ride.id}`}
                         className="rounded-xl border border-slate-200 px-5 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -301,24 +261,20 @@ function MyRides() {
 
                       {ride.role === "driver" &&
                         ride.status === "Published" && (
-                          <button
-                            type="button"
-                            className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                          <Link
+                            to={`/manage-ride/${ride.id}`}
+                            className="rounded-xl bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
                           >
                             Manage Ride
-                          </button>
+                          </Link>
                         )}
-
                     </div>
-
                   </div>
                 </article>
               ))}
             </div>
           )}
-
         </section>
-
       </div>
     </main>
   );

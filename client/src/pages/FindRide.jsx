@@ -1,16 +1,13 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   MapPin,
   CalendarDays,
   Users,
   Search,
-  ArrowRight,
   ShieldCheck,
   Clock3,
-  CarFront,
-  SlidersHorizontal,
-  Sparkles,
+  Car,
 } from "lucide-react";
 
 import RideCard from "../components/rides/RideCard";
@@ -19,110 +16,147 @@ import { locations } from "../data/locations";
 
 function FindRide() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
-    from: "",
-    to: "",
-    date: "",
-    seats: "1",
+    from: location.state?.from || "",
+    to: location.state?.to || "",
+    date: location.state?.date || "",
+    seats: location.state?.seats || "1",
   });
 
-  const [searchedRoute, setSearchedRoute] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [searchedRoute, setSearchedRoute] = useState(
+    location.state?.from || location.state?.to
+      ? {
+          pickup: location.state?.from || "",
+          destination: location.state?.to || "",
+        }
+      : null
+  );
+  const [hasSearched, setHasSearched] = useState(
+    Boolean(location.state?.from || location.state?.to || location.state?.date)
+  );
 
-  const mockRides = [
-    {
-      id: 1,
-      driver: {
-        name: "Michael Johnson",
-        rating: 4.8,
-      },
-      from: "Ruston, LA",
-      to: "Monroe, LA",
-      date: "Aug 28, 2026",
-      departureTime: "7:30 AM",
-      availableSeats: 2,
-      price: 15,
-    },
-    {
-      id: 2,
-      driver: {
-        name: "Sarah Williams",
-        rating: 4.9,
-      },
-      from: "Ruston, LA",
-      to: "Shreveport, LA",
-      date: "Aug 28, 2026",
-      departureTime: "9:00 AM",
-      availableSeats: 3,
-      price: 20,
-    },
-    {
-      id: 3,
-      driver: {
-        name: "Daniel Carter",
-        rating: 4.7,
-      },
-      from: "Ruston, LA",
-      to: "Monroe, LA",
-      date: "Aug 28, 2026",
-      departureTime: "5:30 PM",
-      availableSeats: 1,
-      price: 12,
-    },
-  ];
+  // Used to trigger smooth scrolling after EVERY search
+  const [searchTrigger, setSearchTrigger] = useState(
+    location.state?.from || location.state?.to ? 1 : 0
+  );
 
+  const [rides, setRides] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // --------------------------------------------------
+  // FETCH RIDES FROM BACKEND
+  // --------------------------------------------------
+  useEffect(() => {
+    const fetchRides = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(
+          "http://localhost:5000/api/rides"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to fetch rides"
+          );
+        }
+
+        setRides(data.rides || []);
+      } catch (error) {
+        console.error("Fetch rides error:", error);
+
+        setError(
+          error.message ||
+            "Something went wrong while loading rides"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRides();
+  }, []);
+
+  // --------------------------------------------------
+  // AUTO SCROLL TO RESULTS AFTER SEARCH
+  // --------------------------------------------------
+  useEffect(() => {
+    if (searchTrigger === 0) return;
+
+    const resultsSection =
+      document.getElementById("ride-results");
+
+    if (resultsSection) {
+      setTimeout(() => {
+        resultsSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }, [searchTrigger]);
+
+  // --------------------------------------------------
+  // HANDLE INPUT CHANGE
+  // --------------------------------------------------
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
+  // --------------------------------------------------
+  // HANDLE MAIN SEARCH
+  // --------------------------------------------------
   const handleSearch = (e) => {
     e.preventDefault();
 
-    const pickup = locations[formData.from];
-    const destination = locations[formData.to];
-
-    if (!pickup || !destination) {
-      return;
-    }
-
     setSearchedRoute({
-      pickup,
-      destination,
+      pickup: formData.from,
+      destination: formData.to,
     });
 
     setHasSearched(true);
 
-    console.log("Searching for rides:", formData);
+    // Trigger scroll every time the search button is clicked
+    setSearchTrigger((prev) => prev + 1);
   };
 
+  // --------------------------------------------------
+  // HANDLE POPULAR ROUTE
+  // --------------------------------------------------
   const handleQuickRoute = (from, to) => {
-    const pickup = locations[from];
-    const destination = locations[to];
-
-    if (!pickup || !destination) {
-      return;
-    }
-
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       from,
       to,
-    });
+    }));
 
     setSearchedRoute({
-      pickup,
-      destination,
+      pickup: from,
+      destination: to,
     });
 
     setHasSearched(true);
+
+    // Trigger scroll for popular routes too
+    setSearchTrigger((prev) => prev + 1);
   };
 
+  // --------------------------------------------------
+  // FILTER RIDES
+  // --------------------------------------------------
   const filteredRides = hasSearched
-    ? mockRides.filter((ride) => {
+    ? rides.filter((ride) => {
         const matchesFrom =
           !formData.from ||
           ride.from
@@ -138,523 +172,465 @@ function FindRide() {
         const matchesSeats =
           ride.availableSeats >= Number(formData.seats);
 
-        return matchesFrom && matchesTo && matchesSeats;
-      })
-    : mockRides;
+        const matchesDate =
+          !formData.date ||
+          (ride.date && !isNaN(new Date(ride.date).getTime())
+            ? new Date(ride.date).toISOString().split("T")[0] === formData.date
+            : false);
 
-  const quickRoutes = [
-    {
-      from: "Ruston, LA",
-      to: "Monroe, LA",
-    },
-    {
-      from: "Ruston, LA",
-      to: "Shreveport, LA",
-    },
-  ];
+        return (
+          matchesFrom &&
+          matchesTo &&
+          matchesSeats &&
+          matchesDate
+        );
+      })
+    : rides;
+
+  const formatDate = (dateVal) => {
+    if (!dateVal) return "N/A";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (timeVal) => {
+    if (!timeVal) return "N/A";
+    if (/^\d{1,2}:\d{2}$/.test(timeVal)) {
+      const d = new Date(`1970-01-01T${timeVal}`);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      }
+    }
+    return timeVal;
+  };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
+      {/* ==================================================
+          HERO SECTION
+      ================================================== */}
+      <section className="relative overflow-hidden bg-linear-to-br from-blue-700 via-blue-600 to-cyan-500">
+        <div className="absolute inset-0 bg-black/10" />
 
-      {/* =====================================================
-          HERO
-      ====================================================== */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:px-6 sm:pt-20 lg:px-8">
-
-          <div className="max-w-3xl">
-
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-              <Sparkles size={16} />
-              Travel smarter with UniVah
+        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center text-white">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium backdrop-blur-sm">
+              <ShieldCheck size={17} />
+              Safe. Simple. Student-friendly.
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Find a ride.
-              <span className="block text-blue-600">
-                Share the journey.
-              </span>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Find Your Perfect Ride
             </h1>
 
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-              Find affordable rides with people heading your way.
-              Choose a route, compare available rides, and request
-              a seat in just a few clicks.
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-blue-50 sm:text-xl">
+              Share a ride, save money, and travel together
+              with your university community.
             </p>
-
-          </div>
-
-          {/* Trust indicators */}
-          <div className="mt-8 flex flex-wrap gap-6 text-sm text-slate-600">
-
-            <div className="flex items-center gap-2">
-              <ShieldCheck
-                size={18}
-                className="text-blue-600"
-              />
-              Trusted community
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Clock3
-                size={18}
-                className="text-blue-600"
-              />
-              Simple booking
-            </div>
-
-            <div className="flex items-center gap-2">
-              <CarFront
-                size={18}
-                className="text-blue-600"
-              />
-              Affordable rides
-            </div>
-
           </div>
         </div>
       </section>
 
-      {/* =====================================================
-          SEARCH AREA
-      ====================================================== */}
-      <section className="-mt-8 relative z-10 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      {/* ==================================================
+          SEARCH SECTION
+      ================================================== */}
+      <section className="relative z-10 mx-auto -mt-10 max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl bg-white p-5 shadow-xl sm:p-7">
+          <form
+            onSubmit={handleSearch}
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-5"
+          >
+            {/* FROM */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                From
+              </label>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
+              <div className="relative">
+                <MapPin
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <select
+                  name="from"
+                  value={formData.from}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Any location</option>
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">
-                  Where are you going?
-                </h2>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Search available rides for your journey.
-                </p>
+                  {Object.values(locations).map((location) => (
+                    <option
+                      key={location.name}
+                      value={location.name}
+                    >
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <div className="hidden items-center gap-2 text-sm text-slate-500 sm:flex">
-                <SlidersHorizontal size={16} />
-                Flexible travel options
-              </div>
-
             </div>
 
-            <form onSubmit={handleSearch}>
+            {/* TO */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                To
+              </label>
 
-              {/* Locations */}
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="relative">
+                <MapPin
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-                {/* FROM */}
-                <div>
-                  <label
-                    htmlFor="from"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
-                    From
-                  </label>
+                <select
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Any destination</option>
 
-                  <div className="relative">
-                    <MapPin
-                      size={20}
-                      className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-blue-500"
-                    />
-
-                    <select
-                      id="from"
-                      name="from"
-                      value={formData.from}
-                      onChange={handleChange}
-                      required
-                      className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                  {Object.values(locations).map((location) => (
+                    <option
+                      key={location.name}
+                      value={location.name}
                     >
-                      <option value="">
-                        Select pickup location
-                      </option>
-
-                      {Object.keys(locations).map((location) => (
-                        <option
-                          key={location}
-                          value={location}
-                        >
-                          {location}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* TO */}
-                <div>
-                  <label
-                    htmlFor="to"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
-                    To
-                  </label>
-
-                  <div className="relative">
-                    <MapPin
-                      size={20}
-                      className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-red-500"
-                    />
-
-                    <select
-                      id="to"
-                      name="to"
-                      value={formData.to}
-                      onChange={handleChange}
-                      required
-                      className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
-                    >
-                      <option value="">
-                        Select destination
-                      </option>
-
-                      {Object.keys(locations).map((location) => (
-                        <option
-                          key={location}
-                          value={location}
-                        >
-                          {location}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+            </div>
 
-              {/* Date + Seats */}
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {/* DATE */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Date
+              </label>
 
-                {/* DATE */}
-                <div>
-                  <label
-                    htmlFor="date"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
-                    Travel date
-                  </label>
+              <div className="relative">
+                <CalendarDays
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
 
-                  <div className="relative">
-                    <CalendarDays
-                      size={20}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
-                    />
-
-                    <input
-                      id="date"
-                      name="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={handleChange}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
-                    />
-                  </div>
-                </div>
-
-                {/* SEATS */}
-                <div>
-                  <label
-                    htmlFor="seats"
-                    className="mb-2 block text-sm font-semibold text-slate-700"
-                  >
-                    Passengers
-                  </label>
-
-                  <div className="relative">
-                    <Users
-                      size={20}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500"
-                    />
-
-                    <select
-                      id="seats"
-                      name="seats"
-                      value={formData.seats}
-                      onChange={handleChange}
-                      className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50"
-                    >
-                      <option value="1">1 passenger</option>
-                      <option value="2">2 passengers</option>
-                      <option value="3">3 passengers</option>
-                      <option value="4">4 passengers</option>
-                    </select>
-                  </div>
-                </div>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
               </div>
+            </div>
 
-              {/* Search button */}
+            {/* SEATS */}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Seats
+              </label>
+
+              <div className="relative">
+                <Users
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <select
+                  name="seats"
+                  value={formData.seats}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="1">1 seat</option>
+                  <option value="2">2 seats</option>
+                  <option value="3">3 seats</option>
+                  <option value="4">4 seats</option>
+                  <option value="5">5 seats</option>
+                  <option value="6">6 seats</option>
+                </select>
+              </div>
+            </div>
+
+            {/* SEARCH BUTTON */}
+            <div className="flex items-end">
               <button
                 type="submit"
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-4 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
               >
-                <Search size={20} />
+                <Search size={19} />
                 Find Available Rides
               </button>
+            </div>
+          </form>
+        </div>
+      </section>
 
-            </form>
+      {/* ==================================================
+          TRUST INDICATORS
+      ================================================== */}
+      <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:px-8">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
+            <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+              <ShieldCheck size={20} />
+            </div>
+
+            <div>
+              <p className="font-semibold text-slate-800">
+                Verified Community
+              </p>
+              <p className="text-sm text-slate-500">
+                Ride with trusted students
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
+            <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+              <Clock3 size={20} />
+            </div>
+
+            <div>
+              <p className="font-semibold text-slate-800">
+                Flexible Travel
+              </p>
+              <p className="text-sm text-slate-500">
+                Find rides that fit your schedule
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
+            <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+              <Car size={20} />
+            </div>
+
+            <div>
+              <p className="font-semibold text-slate-800">
+                Affordable Rides
+              </p>
+              <p className="text-sm text-slate-500">
+                Split the cost and save more
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* =====================================================
+      {/* ==================================================
           POPULAR ROUTES
-      ====================================================== */}
-      <section className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 lg:px-8">
-
-        <div className="mb-5">
+      ================================================== */}
+      <section className="mx-auto max-w-6xl px-4 pb-4 pt-14 sm:px-6 lg:px-8">
+        <div className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-            Popular routes
+            Quick Search
           </p>
 
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">
-            Start with a popular journey
+          <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+            Popular Routes
           </h2>
+
+          <p className="mt-2 text-slate-600">
+            Start with one of the most searched routes.
+          </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-
-          {quickRoutes.map((route) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            ["Ruston, LA", "Monroe, LA"],
+            ["Ruston, LA", "Shreveport, LA"],
+            ["Ruston, LA", "Alexandria, LA"],
+          ].map(([from, to]) => (
             <button
-              key={`${route.from}-${route.to}`}
+              key={`${from}-${to}`}
               type="button"
-              onClick={() =>
-                handleQuickRoute(route.from, route.to)
-              }
-              className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+              onClick={() => handleQuickRoute(from, to)}
+              className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
             >
-
-              <div className="flex items-center gap-4">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-                  <MapPin
-                    size={20}
-                    className="text-blue-600"
-                  />
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
+                  <MapPin size={19} />
                 </div>
 
                 <div>
-                  <p className="font-semibold text-slate-900">
-                    {route.from}
+                  <p className="font-semibold text-slate-800">
+                    {from}
                   </p>
-
-                  <div className="my-1 flex items-center gap-2 text-xs text-slate-400">
-                    <span className="h-px w-5 bg-slate-300" />
-                    route
-                    <span className="h-px w-5 bg-slate-300" />
-                  </div>
-
-                  <p className="font-semibold text-slate-900">
-                    {route.to}
+                  <p className="text-sm text-slate-500">
+                    → {to}
                   </p>
                 </div>
-
               </div>
 
-              <ArrowRight
-                size={20}
-                className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-blue-600"
-              />
-
+              <span className="text-blue-600 transition group-hover:translate-x-1">
+                →
+              </span>
             </button>
           ))}
-
         </div>
       </section>
 
-      {/* =====================================================
-          SEARCHED ROUTE + MAP
-      ====================================================== */}
-      {searchedRoute && (
-        <section className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 lg:px-8">
+      {/* ==================================================
+          MAP
+      ================================================== */}
+      <section className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 lg:px-8">
+        <RideMap
+          pickup={searchedRoute?.pickup || formData.from}
+          destination={
+            searchedRoute?.destination || formData.to
+          }
+        />
+      </section>
 
-          <div className="mb-5">
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-              Your journey
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              {searchedRoute.pickup.name}
-              <span className="mx-2 text-slate-400">
-                →
-              </span>
-              {searchedRoute.destination.name}
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-500">
-              Here's your route. Available rides are shown below.
-            </p>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <RideMap
-              pickup={searchedRoute.pickup}
-              destination={searchedRoute.destination}
-            />
-          </div>
-
-        </section>
-      )}
-
-      {/* =====================================================
+      {/* ==================================================
           RIDE RESULTS
-      ====================================================== */}
-      <section className="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 lg:px-8">
+          IMPORTANT: id="ride-results"
+      ================================================== */}
+      <section
+        id="ride-results"
+        className="mx-auto max-w-6xl scroll-mt-24 px-4 pb-16 pt-14 sm:px-6 lg:px-8"
+      >
+        <div className="mb-7">
+          <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
+            Available Rides
+          </p>
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+            {hasSearched
+              ? "Rides matching your search"
+              : "Available rides"}
+          </h2>
 
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-              {hasSearched ? "Search results" : "Explore rides"}
+          {searchedRoute && (
+            <p className="mt-2 text-slate-600">
+              {searchedRoute.pickup || "Any location"}{" "}
+              →{" "}
+              {searchedRoute.destination || "Any destination"}
             </p>
-
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">
-              {hasSearched
-                ? "Available rides"
-                : "Rides around Ruston"}
-            </h2>
-
-            <p className="mt-2 text-sm text-slate-500">
-              {hasSearched
-                ? `Showing rides that match your selected route and passenger count.`
-                : "Explore rides available on popular routes."}
-            </p>
-          </div>
-
-          {hasSearched && filteredRides.length > 0 && (
-            <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-              {filteredRides.length} ride
-              {filteredRides.length !== 1 ? "s" : ""} found
-            </div>
           )}
-
         </div>
 
-        {filteredRides.length > 0 ? (
-          <div className="grid gap-5 lg:grid-cols-2">
+        {/* LOADING */}
+        {loading && (
+          <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
 
-            {filteredRides.map((ride) => (
-              <RideCard
-                key={ride.id}
-                ride={ride}
-                onViewRide={(selectedRide) => {
-                  navigate(`/ride/${selectedRide.id}`);
-                }}
-              />
-            ))}
-
-          </div>
-        ) : (
-          /* Empty state */
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-              <CarFront
-                size={28}
-                className="text-slate-400"
-              />
-            </div>
-
-            <h3 className="mt-5 text-lg font-bold text-slate-900">
-              No rides found
-            </h3>
-
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-              We couldn't find a ride matching your selected
-              route and passenger count. Try another route or
-              reduce the number of passengers.
+            <p className="font-medium text-slate-700">
+              Finding available rides...
             </p>
 
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({
-                  from: "",
-                  to: "",
-                  date: "",
-                  seats: "1",
-                });
-
-                setSearchedRoute(null);
-                setHasSearched(false);
-              }}
-              className="mt-6 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              Browse all rides
-            </button>
-
+            <p className="mt-1 text-sm text-slate-500">
+              Please wait a moment.
+            </p>
           </div>
         )}
 
+        {/* ERROR */}
+        {!loading && error && (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+            <p className="font-semibold text-red-700">
+              Unable to load rides
+            </p>
+
+            <p className="mt-1 text-sm text-red-600">
+              {error}
+            </p>
+          </div>
+        )}
+
+        {/* RESULTS */}
+        {!loading && !error && filteredRides.length > 0 && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {filteredRides.map((ride) => (
+              <RideCard
+                key={ride._id || ride.id}
+                ride={{
+                  ...ride,
+                  id: ride._id || ride.id,
+                  date: formatDate(ride.date),
+                  departureTime: formatTime(ride.departureTime),
+                }}
+                onViewRide={(selectedRide) => {
+                  navigate(
+                    `/ride/${selectedRide.id}`
+                  );
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* NO RESULTS */}
+        {!loading &&
+          !error &&
+          filteredRides.length === 0 && (
+            <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                <Search
+                  size={25}
+                  className="text-slate-400"
+                />
+              </div>
+
+              <h3 className="text-lg font-semibold text-slate-800">
+                No rides found
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+                We couldn't find a ride matching your
+                search. Try changing your route, date,
+                or number of seats.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    from: "",
+                    to: "",
+                    date: "",
+                    seats: "1",
+                  });
+
+                  setSearchedRoute(null);
+                  setHasSearched(false);
+                }}
+                className="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
       </section>
 
-      {/* =====================================================
+      {/* ==================================================
           BOTTOM TRUST SECTION
-      ====================================================== */}
+      ================================================== */}
       <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-12 text-center sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-slate-900">
+            Travel together. Save together.
+          </h2>
 
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
-
-          <div className="grid gap-8 sm:grid-cols-3">
-
-            <div>
-              <ShieldCheck
-                size={24}
-                className="text-blue-600"
-              />
-
-              <h3 className="mt-4 font-bold text-slate-900">
-                Know your ride
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                See driver, vehicle, route, timing and available
-                seats before requesting a ride.
-              </p>
-            </div>
-
-            <div>
-              <Users
-                size={24}
-                className="text-blue-600"
-              />
-
-              <h3 className="mt-4 font-bold text-slate-900">
-                Travel together
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Connect with people heading in the same
-                direction and make better use of every seat.
-              </p>
-            </div>
-
-            <div>
-              <CarFront
-                size={24}
-                className="text-blue-600"
-              />
-
-              <h3 className="mt-4 font-bold text-slate-900">
-                Keep it affordable
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Find convenient shared rides without the cost
-                of traveling alone.
-              </p>
-            </div>
-
-          </div>
-
+          <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+            UniVah makes it easier for students to find
+            affordable rides while building a connected
+            campus community.
+          </p>
         </div>
       </section>
-
-    </main>
+    </div>
   );
 }
 

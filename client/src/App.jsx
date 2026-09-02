@@ -5,7 +5,7 @@ import Footer from "./components/layout/Footer";
 import Hero from "./components/home/Hero";
 import PopularRoutes from "./components/home/PopularRoutes";
 import WhyUniVah from "./components/home/WhyUniVah";
-import HowItWorks from "./components/home/HowItWorks";
+import HowItWorksSection from "./components/home/HowItWorks";
 import SafetySection from "./components/home/SafetySection";
 import CTA from "./components/home/CTA";
 import Login from "./pages/Login";
@@ -17,6 +17,7 @@ import RideDetails from "./pages/RideDetails";
 import OfferRide from "./pages/OfferRide";
 import MyRides from "./pages/MyRides";
 import ManageRide from "./pages/ManageRide";
+import HowItWorks from "./pages/HowItWorks";
 import About from "./pages/About";
 
 function Home() {
@@ -25,7 +26,7 @@ function Home() {
       <Hero />
       <PopularRoutes />
       <WhyUniVah />
-      <HowItWorks />
+      <HowItWorksSection />
       <SafetySection />
       <CTA />
     </main>
@@ -40,6 +41,8 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
@@ -48,10 +51,8 @@ function App() {
             <Route path="/find-ride" element={<FindRide />} />
             <Route path="/ride/:id" element={<RideDetails />} />
             <Route path="/offer-ride" element={<OfferRide />} />
-            <Route path= "/my-rides" element={<MyRides />} />
+            <Route path="/my-rides" element={<MyRides />} />
             <Route path="/manage-ride/:id" element={<ManageRide />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/about" element={<About />} />
           </Route>
         </Routes>
 

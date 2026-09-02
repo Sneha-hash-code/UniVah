@@ -5,8 +5,9 @@ import {
   ShieldCheck,
   Users,
   MapPin,
+  Sparkles,
+  Award,
 } from "lucide-react";
-
 import { Link } from "react-router-dom";
 
 function About() {
@@ -15,37 +16,38 @@ function About() {
       icon: Users,
       title: "Community First",
       description:
-        "UniVah brings people traveling in the same direction together and turns individual journeys into shared experiences.",
+        "UniVah connects students, faculty, and neighbors traveling in the same direction, turning everyday commutes into connected experiences.",
     },
     {
       icon: ShieldCheck,
       title: "Safety & Trust",
       description:
-        "We want every rider and driver to feel confident before, during, and after every journey.",
+        "We prioritize peace of mind with verified student accounts, transparent ride info, and cash-on-delivery simplicity.",
     },
     {
       icon: Car,
-      title: "Smarter Travel",
+      title: "Smarter Mobility",
       description:
-        "Make better use of available seats while making everyday transportation more convenient.",
+        "Make better use of empty vehicle seats across Ruston, Monroe, and Shreveport while reducing congestion and travel costs.",
     },
     {
       icon: Heart,
       title: "Built With Purpose",
       description:
-        "UniVah is built around a simple idea: transportation becomes better when people can help each other.",
+        "UniVah is built on a simple idea: regional transportation gets easier, cleaner, and cheaper when people travel together.",
     },
   ];
 
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-slate-50 px-6 py-20 sm:px-10 lg:px-20">
+      <section className="relative overflow-hidden bg-slate-50 px-6 py-20 sm:px-10 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="mb-4 font-semibold uppercase tracking-wider text-blue-600">
-              About UniVah
-            </p>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600">
+              <Sparkles size={16} />
+              About UniVah Ride Share
+            </div>
 
             <h1 className="text-4xl font-bold leading-tight text-slate-900 sm:text-5xl lg:text-6xl">
               We believe every journey is better
@@ -53,10 +55,59 @@ function About() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              UniVah is a ride-sharing platform designed to connect people
-              traveling in the same direction. We make it easier to find a
-              ride, share an empty seat, and travel together.
+              UniVah is a student-centered ride-sharing platform designed to
+              connect people traveling across Ruston, Monroe, Shreveport, and
+              beyond. We make it simple to find a ride, share empty seats, and
+              split trip costs.
             </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/find-ride"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+              >
+                Find a Ride
+                <ArrowRight size={18} />
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                How It Works
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats section */}
+      <section className="border-y border-slate-200 bg-white py-12">
+        <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-20">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-center">
+            <div>
+              <p className="text-4xl font-bold text-blue-600">100%</p>
+              <p className="mt-2 text-sm font-medium text-slate-600">
+                Student & Community Focused
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-slate-900">COD</p>
+              <p className="mt-2 text-sm font-medium text-slate-600">
+                Transparent Cash Payments
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-blue-600">4+ Cities</p>
+              <p className="mt-2 text-sm font-medium text-slate-600">
+                Ruston, Monroe, Shreveport & more
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl font-bold text-slate-900">0 Fees</p>
+              <p className="mt-2 text-sm font-medium text-slate-600">
+                Direct Driver & Rider Connection
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -70,62 +121,64 @@ function About() {
             </p>
 
             <h2 className="mt-3 text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
-              Transportation shouldn't have to be complicated.
+              Transportation shouldn't have to be stressful or expensive.
             </h2>
 
             <div className="mt-6 space-y-5 text-lg leading-8 text-slate-600">
               <p>
-                Every day, countless people travel along the same roads while
-                many vehicles have empty seats. At the same time, others are
-                looking for an affordable and convenient way to reach their
-                destination.
+                Every day, students and community members travel the I-20
+                corridor between Ruston, Monroe, and Shreveport with empty
+                seats. Meanwhile, others need safe, affordable transportation
+                to campus, grocery hubs, airports, and home for the weekend.
               </p>
 
               <p>
-                UniVah connects these two sides. Instead of traveling alone,
-                people can share their journey with others going the same way.
+                UniVah bridges that gap. Instead of driving alone or paying
+                steep rideshare surge pricing, drivers can post upcoming trips
+                and riders can reserve seats with one click.
               </p>
 
               <p>
-                Our goal is simple: make ride sharing accessible, convenient,
-                and trustworthy.
+                Our mission is simple: provide an accessible, trustworthy,
+                and friendly shared mobility network for our regional community.
               </p>
             </div>
           </div>
 
           {/* Visual card */}
           <div className="relative">
-            <div className="rounded-3xl bg-blue-600 p-8 text-white sm:p-10">
-              <MapPin size={38} />
+            <div className="rounded-3xl bg-blue-600 p-8 text-white sm:p-10 shadow-xl">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
+                <MapPin size={32} />
+              </div>
 
               <h3 className="mt-8 text-3xl font-bold">
                 One destination.
                 <br />
-                Many journeys.
+                Shared journeys.
               </h3>
 
               <p className="mt-5 leading-7 text-blue-100">
-                UniVah helps people discover that they don't have to make the
-                journey alone.
+                UniVah helps students and commuters discover that you never have
+                to make the trip alone. Split the gas, make new friends, and
+                arrive safely.
               </p>
 
               <div className="mt-10 flex items-center gap-4 border-t border-white/20 pt-6">
                 <div className="flex -space-x-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow">
                     U
                   </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-600 bg-slate-100 text-sm font-bold text-slate-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-600 bg-slate-100 text-sm font-bold text-slate-700 shadow">
                     V
                   </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-600 bg-slate-200 text-sm font-bold text-slate-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-600 bg-emerald-400 text-sm font-bold text-slate-900 shadow">
                     +
                   </div>
                 </div>
 
-                <span className="text-sm text-blue-100">
-                  Connected through UniVah
+                <span className="text-sm font-medium text-blue-100">
+                  Ruston & Louisiana Tech Community
                 </span>
               </div>
             </div>
@@ -133,41 +186,21 @@ function About() {
         </div>
       </section>
 
-      {/* Mission */}
-      <section className="bg-slate-50 px-6 py-20 sm:px-10 lg:px-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="font-semibold uppercase tracking-wider text-blue-600">
-            Our Mission
-          </p>
-
-          <h2 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
-            Making shared mobility simpler for everyone.
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-            We want to create a transportation experience where finding a
-            shared ride is as simple as finding your destination. By
-            connecting riders and drivers, UniVah aims to make everyday travel
-            more accessible while building stronger communities.
-          </p>
-        </div>
-      </section>
-
       {/* Values */}
-      <section className="px-6 py-20 sm:px-10 lg:px-20">
+      <section className="bg-slate-50 px-6 py-20 sm:px-10 lg:px-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-2xl">
             <p className="font-semibold uppercase tracking-wider text-blue-600">
-              What We Believe
+              Our Core Values
             </p>
 
             <h2 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">
-              Built around people, not just rides.
+              Built around people, not just cars.
             </h2>
 
             <p className="mt-4 leading-7 text-slate-600">
-              UniVah is more than connecting a pickup point to a destination.
-              It's about creating a better way for people to travel together.
+              UniVah is about more than connecting a pickup location to a drop-off.
+              It's about building trust, reliability, and community on the road.
             </p>
           </div>
 
@@ -184,65 +217,16 @@ function About() {
                     <Icon size={24} />
                   </div>
 
-                  <h3 className="mt-6 text-xl font-semibold text-slate-900">
+                  <h3 className="mt-6 text-xl font-bold text-slate-900">
                     {value.title}
                   </h3>
 
-                  <p className="mt-3 leading-7 text-slate-600">
+                  <p className="mt-3 leading-7 text-slate-600 text-sm">
                     {value.description}
                   </p>
                 </div>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* Community */}
-      <section className="px-6 pb-20 sm:px-10 lg:px-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
-            <div className="grid lg:grid-cols-2">
-              <div className="bg-slate-900 px-8 py-12 text-white sm:px-12 lg:px-14">
-                <p className="font-semibold uppercase tracking-wider text-blue-400">
-                  More Than A Ride
-                </p>
-
-                <h2 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">
-                  Every shared ride can create a connection.
-                </h2>
-
-                <p className="mt-6 leading-7 text-slate-300">
-                  Whether you're heading to campus, going to work, visiting
-                  another city, or simply traveling home, UniVah helps you
-                  connect with people whose journey overlaps with yours.
-                </p>
-              </div>
-
-              <div className="flex items-center px-8 py-12 sm:px-12 lg:px-14">
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <Heart size={24} />
-                  </div>
-
-                  <h3 className="mt-6 text-2xl font-bold text-slate-900">
-                    Share the road.
-                  </h3>
-
-                  <p className="mt-3 leading-7 text-slate-600">
-                    A small empty seat can make someone else's journey easier.
-                  </p>
-
-                  <Link
-                    to="/find-ride"
-                    className="mt-7 inline-flex items-center gap-2 font-semibold text-blue-600 transition hover:text-blue-700"
-                  >
-                    Find a Ride
-                    <ArrowRight size={18} />
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -255,13 +239,13 @@ function About() {
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl leading-7 text-blue-100">
-            Find someone going your way or offer a seat on your next journey.
+            Find someone heading your way or offer an empty seat on your next trip.
           </p>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               to="/find-ride"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-3 font-semibold text-blue-600 transition hover:bg-slate-100"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-blue-600 transition hover:bg-slate-100"
             >
               Find a Ride
               <ArrowRight size={18} />
@@ -269,7 +253,7 @@ function About() {
 
             <Link
               to="/offer-ride"
-              className="inline-flex items-center justify-center rounded-lg border border-white/40 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-xl border border-white/40 px-6 py-3.5 font-semibold text-white transition hover:bg-white/10"
             >
               Offer a Ride
             </Link>

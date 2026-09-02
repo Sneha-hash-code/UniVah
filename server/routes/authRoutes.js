@@ -13,5 +13,6 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/me", protect, getCurrentUser);
+// router.post("/me", getCurrentUser);
 
 module.exports = router;

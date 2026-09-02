@@ -1,4 +1,5 @@
-import Button from "../common/Button";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 function CTA() {
   return (
@@ -14,13 +15,20 @@ function CTA() {
         </p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button>
+          <Link
+            to="/find-ride"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+          >
             Find a Ride
-          </Button>
+            <ArrowRight size={18} />
+          </Link>
 
-          <Button variant="secondary">
+          <Link
+            to="/offer-ride"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
             Offer a Ride
-          </Button>
+          </Link>
         </div>
       </div>
     </section>

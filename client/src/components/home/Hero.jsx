@@ -1,12 +1,32 @@
-import { ArrowRight, MapPin } from "lucide-react";
-import Button from "../common/Button";
-import Input from "../common/Input";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowRight, MapPin, CalendarDays, Users, Search } from "lucide-react";
+import { locations } from "../../data/locations";
 
 function Hero() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    from: "",
+    to: "",
+    date: "",
+    seats: "1",
+  });
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate("/find-ride", { state: formData });
+  };
+
   return (
     <section className="overflow-hidden bg-slate-50">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:py-24 lg:grid-cols-2 lg:items-center lg:px-8">
-        
         <div>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
             <MapPin size={16} />
@@ -24,14 +44,20 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button className="flex items-center justify-center gap-2">
+            <Link
+              to="/find-ride"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+            >
               Find a Ride
               <ArrowRight size={18} />
-            </Button>
+            </Link>
 
-            <Button variant="secondary">
+            <Link
+              to="/offer-ride"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
               Offer a Ride
-            </Button>
+            </Link>
           </div>
         </div>
 
@@ -44,35 +70,111 @@ function Hero() {
             Find a ride that fits your journey.
           </p>
 
-          <div className="mt-6 space-y-4">
-            <Input
-              label="From"
-              placeholder="Ruston, LA"
-            />
-
-            <Input
-              label="To"
-              placeholder="Where are you going?"
-            />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                label="Date"
-                type="date"
-              />
-
-              <Input
-                label="Passengers"
-                type="number"
-                min="1"
-                defaultValue="1"
-              />
+          <form onSubmit={handleSearch} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                Leaving from
+              </label>
+              <div className="relative">
+                <MapPin
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <select
+                  name="from"
+                  value={formData.from}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Any pickup location</option>
+                  {Object.values(locations).map((loc) => (
+                    <option key={loc.name} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <Button className="w-full">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                Going to
+              </label>
+              <div className="relative">
+                <MapPin
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <select
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Any destination</option>
+                  {Object.values(locations).map((loc) => (
+                    <option key={loc.name} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Date
+                </label>
+                <div className="relative">
+                  <CalendarDays
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    name="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                  Passengers
+                </label>
+                <div className="relative">
+                  <Users
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <select
+                    name="seats"
+                    value={formData.seats}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="1">1 passenger</option>
+                    <option value="2">2 passengers</option>
+                    <option value="3">3 passengers</option>
+                    <option value="4">4 passengers</option>
+                    <option value="5">5 passengers</option>
+                    <option value="6">6 passengers</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98]"
+            >
+              <Search size={18} />
               Search Rides
-            </Button>
-          </div>
+            </button>
+          </form>
         </div>
       </div>
     </section>

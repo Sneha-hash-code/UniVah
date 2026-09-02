@@ -1,6 +1,10 @@
 import { CalendarDays, Clock3, MapPin, Users, Star } from "lucide-react";
 
 function RideCard({ ride, onViewRide }) {
+  const driverName = ride?.driver?.name || "Driver";
+  const driverInitial = driverName.charAt(0).toUpperCase() || "D";
+  const driverRating = ride?.driver?.rating ?? "5.0";
+
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="p-5 sm:p-6">
@@ -10,17 +14,17 @@ function RideCard({ ride, onViewRide }) {
 
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
-              {ride.driver.name.charAt(0).toUpperCase()}
+              {driverInitial}
             </div>
 
             <div>
               <h3 className="font-semibold text-slate-900">
-                {ride.driver.name}
+                {driverName}
               </h3>
 
               <div className="mt-1 flex items-center gap-1 text-sm text-slate-500">
                 <Star size={14} className="fill-current text-yellow-500" />
-                <span>{ride.driver.rating}</span>
+                <span>{driverRating}</span>
               </div>
             </div>
           </div>

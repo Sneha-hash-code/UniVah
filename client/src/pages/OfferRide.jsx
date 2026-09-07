@@ -22,7 +22,9 @@ function OfferRide() {
     description: "",
   });
 
-  const [published, setPublished] = useState(false);
+  const [publishedRide, setPublishedRide] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -31,15 +33,52 @@ function OfferRide() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    console.log("Ride to publish:", formData);
+    try {
+      const token = localStorage.getItem("token");
 
-    setPublished(true);
+      if (!token) {
+        throw new Error("Please log in to publish a ride.");
+      }
+
+      const response = await fetch("http://localhost:5000/api/rides", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          from: formData.from,
+          to: formData.to,
+          date: formData.date,
+          departureTime: formData.departureTime,
+          availableSeats: Number(formData.seats),
+          price: Number(formData.price),
+          vehicle: formData.vehicle,
+          description: formData.description,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to publish ride");
+      }
+
+      setPublishedRide(data.ride);
+    } catch (err) {
+      console.error("Publish ride error:", err);
+      setError(err.message || "Something went wrong while publishing your ride.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (published) {
+  if (publishedRide) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center">
@@ -60,7 +99,7 @@ function OfferRide() {
 
             <div className="mt-7 rounded-2xl bg-slate-50 p-5 text-left">
               <p className="font-semibold text-slate-900">
-                {formData.from} → {formData.to}
+                {publishedRide.from || formData.from} → {publishedRide.to || formData.to}
               </p>
 
               <p className="mt-2 text-sm text-slate-500">
@@ -74,17 +113,17 @@ function OfferRide() {
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
-                to="/"
-                className="flex-1 rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                to={`/manage-ride/${publishedRide._id}`}
+                className="flex-1 rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
               >
-                Back Home
+                Manage This Ride
               </Link>
 
               <Link
-                to="/find-ride"
+                to="/my-rides"
                 className="flex-1 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
               >
-                Find a Ride
+                My Rides
               </Link>
             </div>
 
@@ -388,13 +427,21 @@ function OfferRide() {
             />
           </section>
 
+          {/* Error */}
+          {error && (
+            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+              {error}
+            </div>
+          )}
+
           {/* Submit */}
           <div className="mt-8 border-t border-slate-200 pt-6">
             <button
               type="submit"
-              className="w-full rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99]"
+              disabled={loading}
+              className="w-full rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Publish Ride
+              {loading ? "Publishing Ride..." : "Publish Ride"}
             </button>
 
             <p className="mt-3 text-center text-xs text-slate-500">

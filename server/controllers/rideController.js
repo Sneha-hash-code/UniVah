@@ -1,4 +1,6 @@
+const mongoose = require("mongoose");
 const Ride = require("../models/Ride");
+const User = require("../models/User");
 
 // @desc    Create a new ride
 // @route   POST /api/rides
@@ -31,11 +33,9 @@ const createRide = async (req, res) => {
       });
     }
 
-    // Only drivers can publish rides
-    if (req.userRole !== "driver") {
-      return res.status(403).json({
-        message: "Only drivers can publish rides",
-      });
+    // Ensure user role reflects driver status if they are publishing
+    if (req.user && req.user.role !== "driver") {
+      await User.findByIdAndUpdate(req.userId, { role: "driver" });
     }
 
     // Create ride
@@ -96,12 +96,46 @@ const getRides = async (req, res) => {
   }
 };
 
+// @desc    Get rides created by the logged-in driver
+// @route   GET /api/rides/my-rides
+// @access  Private
+const getMyRides = async (req, res) => {
+  try {
+    const rides = await Ride.find({
+      driver: req.userId,
+    })
+      .populate("driver", "name email phone role")
+      .sort({
+        date: 1,
+        departureTime: 1,
+      });
+
+    res.status(200).json({
+      rides,
+    });
+  } catch (error) {
+    console.error("Get my rides error:", error);
+
+    res.status(500).json({
+      message: "Something went wrong while fetching your rides",
+    });
+  }
+};
+
 // @desc    Get a single ride
 // @route   GET /api/rides/:id
 // @access  Public
 const getRideById = async (req, res) => {
   try {
-    const ride = await Ride.findById(req.params.id).populate(
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        message: "Ride not found",
+      });
+    }
+
+    const ride = await Ride.findById(id).populate(
       "driver",
       "name email phone role"
     );
@@ -128,4 +162,5 @@ module.exports = {
   createRide,
   getRides,
   getRideById,
+  getMyRides,
 };

@@ -1,6 +1,9 @@
 import { CalendarDays, Clock3, MapPin, Users, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-function RideCard({ ride, onViewRide }) {
+function RideCard({ ride }) {
+  const navigate = useNavigate();
+
   const driverName = ride?.driver?.name || "Driver";
   const driverInitial = driverName.charAt(0).toUpperCase() || "D";
   const driverRating = ride?.driver?.rating ?? "5.0";
@@ -8,19 +11,15 @@ function RideCard({ ride, onViewRide }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="p-5 sm:p-6">
-
         {/* Driver + Seats */}
         <div className="flex items-start justify-between gap-4">
-
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
               {driverInitial}
             </div>
 
             <div>
-              <h3 className="font-semibold text-slate-900">
-                {driverName}
-              </h3>
+              <h3 className="font-semibold text-slate-900">{driverName}</h3>
 
               <div className="mt-1 flex items-center gap-1 text-sm text-slate-500">
                 <Star size={14} className="fill-current text-yellow-500" />
@@ -36,15 +35,12 @@ function RideCard({ ride, onViewRide }) {
 
         {/* Route */}
         <div className="mt-6 rounded-xl bg-slate-50 p-4">
-
           <div className="flex items-start gap-3">
             <MapPin size={19} className="mt-0.5 shrink-0 text-blue-600" />
 
             <div className="min-w-0">
               <p className="text-sm text-slate-500">From</p>
-              <p className="font-semibold text-slate-900">
-                {ride.from}
-              </p>
+              <p className="font-semibold text-slate-900">{ride.from}</p>
             </div>
           </div>
 
@@ -55,17 +51,13 @@ function RideCard({ ride, onViewRide }) {
 
             <div className="min-w-0">
               <p className="text-sm text-slate-500">To</p>
-              <p className="font-semibold text-slate-900">
-                {ride.to}
-              </p>
+              <p className="font-semibold text-slate-900">{ride.to}</p>
             </div>
           </div>
-
         </div>
 
         {/* Ride Information */}
         <div className="mt-5 grid grid-cols-2 gap-3">
-
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <CalendarDays size={17} className="text-blue-600" />
             <span>{ride.date}</span>
@@ -83,22 +75,18 @@ function RideCard({ ride, onViewRide }) {
 
           <div className="text-right">
             <p className="text-xs text-slate-500">Per seat</p>
-            <p className="text-lg font-bold text-slate-900">
-              ${ride.price}
-            </p>
+            <p className="text-lg font-bold text-slate-900">${ride.price}</p>
           </div>
-
         </div>
 
         {/* Action */}
         <button
           type="button"
-          onClick={() => onViewRide(ride)}
+          onClick={() => navigate(`/ride/${ride._id || ride.id}`)}
           className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99]"
         >
           View Ride
         </button>
-
       </div>
     </article>
   );

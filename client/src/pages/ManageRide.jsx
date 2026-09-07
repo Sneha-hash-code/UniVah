@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   ArrowLeft,
   CalendarDays,
@@ -8,33 +10,208 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+
+import { Link, useParams } from "react-router-dom";
+
 import { useRide } from "../context/RideContext";
 
 function ManageRide() {
+  const params = useParams();
+  const rideId = params.rideId || params.id;
+
   const {
     getRideRequests,
     updateRequestStatus,
+    loading: requestLoading,
   } = useRide();
 
-  const requests = getRideRequests(1);
+  const [ride, setRide] = useState(null);
+  const [requests, setRequests] = useState([]);
 
-  // Temporary frontend data.
-  // Later this will come from the backend.
-  const ride = {
-    id: 1,
-    from: "Ruston, LA",
-    to: "Shreveport, LA",
-    date: "August 30, 2026",
-    time: "9:00 AM",
-    price: 20,
-    availableSeats: 3,
-    vehicle: "Toyota Camry",
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [actionError, setActionError] = useState("");
+
+  // Fetch ride + passenger requests
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRideData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        if (!rideId) {
+          throw new Error("No ride ID provided.");
+        }
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          throw new Error("Please log in to manage this ride.");
+        }
+
+        // Fetch the actual ride
+        const rideResponse = await fetch(
+          `http://localhost:5000/api/rides/${rideId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const rideData = await rideResponse.json();
+
+        if (!rideResponse.ok) {
+          throw new Error(
+            rideData.message || "Failed to fetch ride"
+          );
+        }
+
+        if (isMounted) {
+          setRide(rideData.ride);
+        }
+
+        // Fetch requests for this specific ride
+        const rideRequests = await getRideRequests(rideId);
+
+        if (isMounted) {
+          setRequests(rideRequests || []);
+        }
+      } catch (error) {
+        console.error("Manage ride error:", error);
+
+        if (isMounted) {
+          setError(
+            error.message ||
+              "Something went wrong while loading the ride."
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchRideData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [rideId, getRideRequests]);
+
+  // Accept / Reject request
+  const handleRequestStatus = async (requestId, status) => {
+    try {
+      setActionError("");
+
+      const data = await updateRequestStatus(
+        requestId,
+        status
+      );
+
+      if (data?.request) {
+        setRequests((current) =>
+          current.map((request) =>
+            request._id === requestId
+              ? data.request
+              : request
+          )
+        );
+      }
+
+      if (data?.ride) {
+        setRide(data.ride);
+      }
+    } catch (error) {
+      console.error("Update request error:", error);
+
+      setActionError(
+        error.message ||
+          "Failed to update passenger request."
+      );
+    }
   };
 
   const pendingRequests = requests.filter(
     (request) => request.status === "Pending"
   );
+
+  const formatDate = (date) => {
+    if (!date) return "Date unavailable";
+
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-4xl">
+          <Link
+            to="/my-rides"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
+          >
+            <ArrowLeft size={18} />
+            Back to My Rides
+          </Link>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+            <p className="mt-4 text-sm text-slate-500">
+              Loading your ride...
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Error state
+  if (error || !ride) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-4xl">
+          <Link
+            to="/my-rides"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
+          >
+            <ArrowLeft size={18} />
+            Back to My Rides
+          </Link>
+
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-10 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+              <X size={25} className="text-red-600" />
+            </div>
+
+            <h2 className="mt-4 text-lg font-bold text-red-800">
+              Unable to load ride
+            </h2>
+
+            <p className="mt-2 text-sm text-red-600">
+              {error || "Ride not found."}
+            </p>
+
+            <Link
+              to="/my-rides"
+              className="mt-6 inline-flex rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Return to My Rides
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
@@ -110,7 +287,7 @@ function ManageRide() {
                 </p>
 
                 <p className="font-semibold text-slate-900">
-                  {ride.date}
+                  {formatDate(ride.date)}
                 </p>
               </div>
             </div>
@@ -128,7 +305,7 @@ function ManageRide() {
                 </p>
 
                 <p className="font-semibold text-slate-900">
-                  {ride.time}
+                  {ride.departureTime}
                 </p>
               </div>
             </div>
@@ -249,6 +426,13 @@ function ManageRide() {
 
           </div>
 
+          {/* Action Error */}
+          {actionError && (
+            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {actionError}
+            </div>
+          )}
+
           {/* Requests */}
           <div className="mt-4 space-y-4">
 
@@ -274,7 +458,7 @@ function ManageRide() {
             ) : (
               requests.map((request) => (
                 <article
-                  key={request.id}
+                  key={request._id}
                   className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
                 >
 
@@ -285,22 +469,28 @@ function ManageRide() {
 
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
                         {request.passenger?.name
-                          ? request.passenger.name.charAt(0).toUpperCase()
+                          ? request.passenger.name
+                              .charAt(0)
+                              .toUpperCase()
                           : "P"}
                       </div>
 
                       <div>
                         <h3 className="font-semibold text-slate-900">
-                          {request.passenger?.name || "Passenger"}
+                          {request.passenger?.name ||
+                            "Passenger"}
                         </h3>
 
                         <p className="mt-1 text-sm text-slate-500">
-                          {request.passenger?.email || "Passenger request"}
+                          {request.passenger?.email ||
+                            "Passenger request"}
                         </p>
 
                         <p className="mt-1 text-sm text-slate-500">
                           {request.seats || 1} seat
-                          {(request.seats || 1) > 1 ? "s" : ""}
+                          {(request.seats || 1) > 1
+                            ? "s"
+                            : ""}
                         </p>
                       </div>
 
@@ -313,13 +503,14 @@ function ManageRide() {
                         {/* Accept */}
                         <button
                           type="button"
+                          disabled={requestLoading}
                           onClick={() =>
-                            updateRequestStatus(
-                              request.id,
+                            handleRequestStatus(
+                              request._id,
                               "Accepted"
                             )
                           }
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 active:scale-[0.98]"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           <Check size={17} />
                           Accept
@@ -328,13 +519,14 @@ function ManageRide() {
                         {/* Reject */}
                         <button
                           type="button"
+                          disabled={requestLoading}
                           onClick={() =>
-                            updateRequestStatus(
-                              request.id,
+                            handleRequestStatus(
+                              request._id,
                               "Rejected"
                             )
                           }
-                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           <X size={17} />
                           Reject

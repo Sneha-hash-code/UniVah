@@ -142,7 +142,7 @@ function Navbar() {
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-sm">
                     {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                   </div>
-                  <span className="max-w-[120px] truncate text-sm font-semibold text-slate-700">
+                  <span className="max-w-30 truncate text-sm font-semibold text-slate-700">
                     {user?.name?.split(" ")[0] || "Account"}
                   </span>
                   <ChevronDown

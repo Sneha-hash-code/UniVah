@@ -50,9 +50,11 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/find-ride" element={<FindRide />} />
             <Route path="/ride/:id" element={<RideDetails />} />
+            <Route path="/rides/:id" element={<RideDetails />} />
             <Route path="/offer-ride" element={<OfferRide />} />
             <Route path="/my-rides" element={<MyRides />} />
             <Route path="/manage-ride/:id" element={<ManageRide />} />
+            <Route path="/manage-ride/:rideId" element={<ManageRide />} />
           </Route>
         </Routes>
 

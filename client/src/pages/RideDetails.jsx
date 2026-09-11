@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { useRide } from "../context/RideContext";
+import { useAuth } from "../context/AuthContext";
 
 import {
+  AlertTriangle,
   ArrowLeft,
   CalendarDays,
+  CheckCircle2,
   Clock3,
   MapPin,
   MessageCircle,
   ShieldCheck,
   Star,
   Users,
+  X,
 } from "lucide-react";
 
 import { Link, useParams } from "react-router-dom";
@@ -17,6 +21,7 @@ import RideMap from "../components/rides/RideMap";
 
 function RideDetails() {
   const { id } = useParams();
+  const { user } = useAuth();
 
   const { requestRide, loading: requestLoading } = useRide();
 
@@ -27,6 +32,11 @@ function RideDetails() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState("");
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
 
   // Fetch ride details
   useEffect(() => {
@@ -59,6 +69,16 @@ function RideDetails() {
     }
   }, [id]);
 
+  // Check if current user is the driver
+  const isDriver = Boolean(
+    user &&
+    ride?.driver &&
+    (user._id === ride.driver?._id ||
+     user._id === ride.driver ||
+     user.id === ride.driver?._id ||
+     user.id === ride.driver)
+  );
+
   // Send real ride request
   const handleRequestRide = async () => {
     try {
@@ -73,6 +93,55 @@ function RideDetails() {
       setRequestError(
         err.message || "Unable to send ride request"
       );
+    }
+  };
+
+  // Driver Cancel Ride handler
+  const handleCancelRide = async () => {
+    try {
+      setCancelLoading(true);
+      setActionError("");
+      setActionSuccess("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Please log in to cancel this ride.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/rides/${id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "Cancelled",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to cancel ride.");
+      }
+
+      if (data?.ride) {
+        setRide(data.ride);
+      } else {
+        setRide((prev) => (prev ? { ...prev, status: "Cancelled" } : prev));
+      }
+
+      setActionSuccess("Ride successfully cancelled!");
+      setShowCancelModal(false);
+    } catch (err) {
+      console.error("Cancel ride error:", err);
+      setActionError(err.message || "Failed to cancel ride.");
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -135,18 +204,61 @@ function RideDetails() {
       })
     : "Date unavailable";
 
+  const getStatusBadgeClasses = (status) => {
+    if (status === "Completed") {
+      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    }
+    if (status === "Cancelled") {
+      return "bg-red-50 text-red-700 border border-red-200";
+    }
+    return "bg-blue-50 text-blue-700 border border-blue-200";
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-4xl">
 
         {/* Back */}
         <Link
-          to="/find-ride"
+          to={isDriver ? "/my-rides" : "/find-ride"}
           className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition hover:text-blue-600"
         >
           <ArrowLeft size={18} />
-          Back to Find a Ride
+          {isDriver ? "Back to My Rides" : "Back to Find a Ride"}
         </Link>
+
+        {/* Action Error / Success alerts */}
+        {actionError && (
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
+            <div className="flex items-center gap-2">
+              <X size={18} className="text-red-600" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionError("")}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {actionSuccess && (
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-emerald-600" />
+              <span>{actionSuccess}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActionSuccess("")}
+              className="text-emerald-500 hover:text-emerald-700"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Main Card */}
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -155,9 +267,18 @@ function RideDetails() {
           <div className="border-b border-slate-200 p-6 sm:p-8">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">
-                  Ride Details
-                </p>
+                <div className="flex items-center gap-2.5">
+                  <p className="text-sm font-medium text-blue-600">
+                    Ride Details
+                  </p>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBadgeClasses(
+                      ride.status,
+                    )}`}
+                  >
+                    {ride.status || "Published"}
+                  </span>
+                </div>
 
                 <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
                   {ride.from} → {ride.to}
@@ -192,7 +313,7 @@ function RideDetails() {
 
                   <div>
                     <h3 className="font-semibold text-slate-900">
-                      {driverName}
+                      {driverName} {isDriver && "(You)"}
                     </h3>
 
                     <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
@@ -206,13 +327,15 @@ function RideDetails() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 sm:flex"
-                >
-                  <MessageCircle size={17} />
-                  Message
-                </button>
+                {!isDriver && (
+                  <button
+                    type="button"
+                    className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 sm:flex"
+                  >
+                    <MessageCircle size={17} />
+                    Message
+                  </button>
+                )}
               </div>
             </section>
 
@@ -407,41 +530,156 @@ function RideDetails() {
               </p>
             </section>
 
-            {/* Request */}
+            {/* Action Section */}
             <div className="mt-8 border-t border-slate-200 pt-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {isDriver ? (
+                /* Driver Actions */
+                ride.status === "Published" ? (
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">Driver Controls</p>
+                      <p className="text-base font-semibold text-slate-900">
+                        Manage or Cancel this published ride
+                      </p>
+                    </div>
 
-                <div>
-                  <p className="text-sm text-slate-500">
-                    Your seat
-                  </p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Link
+                        to={`/manage-ride/${ride._id}`}
+                        className="rounded-xl bg-slate-900 px-6 py-3.5 text-center font-semibold text-white transition hover:bg-slate-800"
+                      >
+                        Manage Ride
+                      </Link>
 
-                  <p className="text-2xl font-bold text-slate-900">
-                    ${ride.price}
-                  </p>
-                </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCancelModal(true)}
+                        disabled={cancelLoading}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-6 py-3.5 text-center font-semibold text-red-600 shadow-sm transition hover:bg-red-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <X size={18} />
+                        {cancelLoading ? "Cancelling..." : "Cancel Ride"}
+                      </button>
+                    </div>
+                  </div>
+                ) : ride.status === "Cancelled" ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
+                    <p className="font-semibold text-red-800">
+                      This ride has been cancelled
+                    </p>
+                    <p className="mt-1 text-sm text-red-600">
+                      No passengers can join this ride.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+                    <p className="font-semibold text-emerald-800">
+                      This ride is marked as completed
+                    </p>
+                  </div>
+                )
+              ) : (
+                /* Passenger Actions */
+                ride.status === "Published" ? (
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">Your seat</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        ${ride.price}
+                      </p>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequestError("");
-                    setRequestSent(false);
-                    setShowRequestModal(true);
-                  }}
-                  disabled={ride.availableSeats <= 0}
-                  className="rounded-xl bg-blue-600 px-8 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  {ride.availableSeats > 0
-                    ? "Request to Join"
-                    : "No Seats Available"}
-                </button>
-
-              </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRequestError("");
+                        setRequestSent(false);
+                        setShowRequestModal(true);
+                      }}
+                      disabled={ride.availableSeats <= 0}
+                      className="rounded-xl bg-blue-600 px-8 py-3.5 font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      {ride.availableSeats > 0
+                        ? "Request to Join"
+                        : "No Seats Available"}
+                    </button>
+                  </div>
+                ) : ride.status === "Cancelled" ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
+                    <p className="font-semibold text-red-800">
+                      This ride has been cancelled by the driver
+                    </p>
+                    <p className="mt-1 text-sm text-red-600">
+                      Joining requests are closed for this ride.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+                    <p className="font-semibold text-emerald-800">
+                      This ride has already been completed
+                    </p>
+                  </div>
+                )
+              )}
             </div>
 
           </div>
         </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <AlertTriangle size={28} />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h2 className="text-xl font-bold text-slate-900">
+                Cancel this ride?
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Are you sure you want to cancel the ride from{" "}
+                <span className="font-semibold text-slate-700">{ride.from}</span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-700">{ride.to}</span>?
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {actionError && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
+                <p className="text-sm font-medium text-red-700">{actionError}</p>
+              </div>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setActionError("");
+                }}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Keep Ride
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCancelRide}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 disabled:bg-red-400"
+              >
+                {cancelLoading ? "Cancelling..." : "Cancel Ride"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Request Modal */}
       {showRequestModal && (

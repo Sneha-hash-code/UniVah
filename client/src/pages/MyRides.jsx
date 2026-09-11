@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 
 import {
+  AlertTriangle,
   CalendarDays,
   Car,
+  CheckCircle2,
   Clock3,
   MapPin,
   Users,
+  X,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -22,77 +25,131 @@ function MyRides() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchMyRides = async () => {
-      try {
-        setLoading(true);
-        setError("");
+  const [rideToCancel, setRideToCancel] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [cancelSuccess, setCancelSuccess] = useState("");
 
-        const token = localStorage.getItem("token");
+  const fetchMyRides = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        if (!token) {
-          setError("Please log in to view your rides.");
-          return;
-        }
+      const token = localStorage.getItem("token");
 
-        // Fetch driver rides & passenger requests in parallel
-        const [ridesRes, requestsRes] = await Promise.allSettled([
-          fetch("http://localhost:5000/api/rides/my-rides", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch("http://localhost:5000/api/ride-requests/my", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ]);
-
-        let driverRides = [];
-        if (ridesRes.status === "fulfilled" && ridesRes.value.ok) {
-          const data = await ridesRes.value.json();
-          driverRides = data.rides || [];
-        }
-
-        let passengerRequests = [];
-        if (requestsRes.status === "fulfilled" && requestsRes.value.ok) {
-          const data = await requestsRes.value.json();
-          passengerRequests = data.requests || [];
-        }
-
-        const today = new Date();
-
-        const upcomingRides = driverRides.filter((ride) => {
-          const rideDate = new Date(ride.date);
-          return ride.status === "Published" && rideDate >= today;
-        });
-
-        const completedRides = driverRides.filter(
-          (ride) =>
-            ride.status === "Completed" ||
-            new Date(ride.date) < today
-        );
-
-        setRides({
-          upcoming: upcomingRides,
-          requested: passengerRequests,
-          completed: completedRides,
-        });
-      } catch (error) {
-        console.error("Fetch my rides error:", error);
-
-        setError(
-          error.message ||
-            "Something went wrong while fetching your rides."
-        );
-      } finally {
-        setLoading(false);
+      if (!token) {
+        setError("Please log in to view your rides.");
+        return;
       }
-    };
 
+      // Fetch driver rides & passenger requests in parallel
+      const [ridesRes, requestsRes] = await Promise.allSettled([
+        fetch("http://localhost:5000/api/rides/my-rides", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        fetch("http://localhost:5000/api/ride-requests/my", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
+
+      let driverRides = [];
+      if (ridesRes.status === "fulfilled" && ridesRes.value.ok) {
+        const data = await ridesRes.value.json();
+        driverRides = data.rides || [];
+      }
+
+      let passengerRequests = [];
+      if (requestsRes.status === "fulfilled" && requestsRes.value.ok) {
+        const data = await requestsRes.value.json();
+        passengerRequests = data.requests || [];
+      }
+
+      const upcomingRides = driverRides.filter((ride) => {
+        return ride.status === "Published";
+      });
+
+      const completedRides = driverRides.filter((ride) => {
+        return ride.status === "Completed" || ride.status === "Cancelled";
+      });
+
+      setRides({
+        upcoming: upcomingRides,
+        requested: passengerRequests,
+        completed: completedRides,
+      });
+    } catch (err) {
+      console.error("Fetch my rides error:", err);
+
+      setError(
+        err.message || "Something went wrong while fetching your rides.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMyRides();
   }, []);
+
+  const handleCancelRide = async () => {
+    if (!rideToCancel) return;
+
+    try {
+      setCancelLoading(true);
+      setCancelError("");
+      setCancelSuccess("");
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Please log in to cancel this ride.");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/rides/${rideToCancel._id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "Cancelled",
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to cancel ride.");
+      }
+
+      const cancelledRide = data.ride || {
+        ...rideToCancel,
+        status: "Cancelled",
+      };
+
+      setRides((prev) => ({
+        ...prev,
+        upcoming: prev.upcoming.filter((r) => r._id !== rideToCancel._id),
+        completed: [cancelledRide, ...prev.completed],
+      }));
+
+      setCancelSuccess("Ride successfully cancelled!");
+      setRideToCancel(null);
+    } catch (err) {
+      console.error("Cancel ride error:", err);
+      setCancelError(err.message || "Failed to cancel ride.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   const tabs = [
     {
@@ -105,7 +162,7 @@ function MyRides() {
     },
     {
       id: "completed",
-      label: "Completed",
+      label: "Completed & Cancelled",
     },
   ];
 
@@ -144,13 +201,10 @@ function MyRides() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-12">
       <div className="mx-auto max-w-5xl">
-
         {/* Header */}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-600">
-              YOUR JOURNEYS
-            </p>
+            <p className="text-sm font-semibold text-blue-600">YOUR JOURNEYS</p>
 
             <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
               My Rides
@@ -169,6 +223,39 @@ function MyRides() {
             Offer a Ride
           </Link>
         </div>
+
+        {/* Action Alerts */}
+        {cancelError && (
+          <div className="mt-6 flex items-center justify-between rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
+            <div className="flex items-center gap-2">
+              <X size={18} className="text-red-600" />
+              <span>{cancelError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCancelError("")}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {cancelSuccess && (
+          <div className="mt-6 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 shadow-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-emerald-600" />
+              <span>{cancelSuccess}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCancelSuccess("")}
+              className="text-emerald-500 hover:text-emerald-700"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="mt-8 flex overflow-x-auto rounded-xl border border-slate-200 bg-white p-1">
@@ -204,9 +291,7 @@ function MyRides() {
           <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
 
-            <p className="mt-4 text-sm text-slate-500">
-              Loading your rides...
-            </p>
+            <p className="mt-4 text-sm text-slate-500">Loading your rides...</p>
           </div>
         )}
 
@@ -217,9 +302,7 @@ function MyRides() {
               Unable to load your rides
             </h2>
 
-            <p className="mt-2 text-sm text-red-600">
-              {error}
-            </p>
+            <p className="mt-2 text-sm text-red-600">{error}</p>
           </div>
         )}
 
@@ -229,10 +312,7 @@ function MyRides() {
             {activeRides.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                  <Car
-                    size={25}
-                    className="text-slate-400"
-                  />
+                  <Car size={25} className="text-slate-400" />
                 </div>
 
                 <h2 className="mt-4 text-lg font-bold text-slate-900">
@@ -265,7 +345,7 @@ function MyRides() {
               <div className="space-y-5">
                 {activeRides.map((item) => {
                   const isRequestItem = activeTab === "requested";
-                  const ride = isRequestItem ? item.ride : item;
+                  const ride = isRequestItem ? item.ride : item.ride || item;
                   const itemStatus = isRequestItem ? item.status : ride?.status;
 
                   if (!ride) return null;
@@ -279,10 +359,7 @@ function MyRides() {
                       <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                         <div className="flex items-center gap-3">
                           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100">
-                            <Car
-                              size={20}
-                              className="text-blue-600"
-                            />
+                            <Car size={20} className="text-blue-600" />
                           </div>
 
                           <div>
@@ -300,10 +377,12 @@ function MyRides() {
 
                         <span
                           className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${getStatusClasses(
-                            itemStatus
+                            itemStatus,
                           )}`}
                         >
-                          {isRequestItem ? `Request: ${itemStatus}` : itemStatus}
+                          {isRequestItem
+                            ? `Request: ${itemStatus}`
+                            : itemStatus}
                         </span>
                       </div>
 
@@ -312,24 +391,16 @@ function MyRides() {
                         <div className="rounded-xl bg-slate-50 p-4">
                           <div className="flex gap-3">
                             <div className="flex flex-col items-center">
-                              <MapPin
-                                size={19}
-                                className="text-blue-600"
-                              />
+                              <MapPin size={19} className="text-blue-600" />
 
                               <div className="my-1.5 h-5 border-l border-dashed border-slate-300" />
 
-                              <MapPin
-                                size={19}
-                                className="text-red-500"
-                              />
+                              <MapPin size={19} className="text-red-500" />
                             </div>
 
                             <div className="space-y-5">
                               <div>
-                                <p className="text-xs text-slate-500">
-                                  From
-                                </p>
+                                <p className="text-xs text-slate-500">From</p>
 
                                 <p className="font-semibold text-slate-900">
                                   {ride.from}
@@ -337,9 +408,7 @@ function MyRides() {
                               </div>
 
                               <div>
-                                <p className="text-xs text-slate-500">
-                                  To
-                                </p>
+                                <p className="text-xs text-slate-500">To</p>
 
                                 <p className="font-semibold text-slate-900">
                                   {ride.to}
@@ -352,37 +421,25 @@ function MyRides() {
                         {/* Details */}
                         <div className="mt-5 grid gap-3 sm:grid-cols-4">
                           <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <CalendarDays
-                              size={17}
-                              className="text-blue-600"
-                            />
+                            <CalendarDays size={17} className="text-blue-600" />
 
                             {formatDate(ride.date)}
                           </div>
 
                           <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Clock3
-                              size={17}
-                              className="text-blue-600"
-                            />
+                            <Clock3 size={17} className="text-blue-600" />
 
                             {ride.departureTime}
                           </div>
 
                           <div className="flex items-center gap-2 text-sm text-slate-600">
-                            <Users
-                              size={17}
-                              className="text-blue-600"
-                            />
-
+                            <Users size={17} className="text-blue-600" />
                             {ride.availableSeats} seat
                             {ride.availableSeats > 1 ? "s" : ""}
                           </div>
 
                           <div>
-                            <p className="text-xs text-slate-500">
-                              Payment
-                            </p>
+                            <p className="text-xs text-slate-500">Payment</p>
 
                             <p className="text-sm font-semibold text-slate-900">
                               ${ride.price} • COD
@@ -399,13 +456,24 @@ function MyRides() {
                             View Details
                           </Link>
 
-                          {!isRequestItem && ride.status === "Published" && (
-                            <Link
-                              to={`/manage-ride/${ride._id}`}
-                              className="rounded-xl bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
-                            >
-                              Manage Ride
-                            </Link>
+                          {!isRequestItem && itemStatus === "Published" && (
+                            <>
+                              <Link
+                                to={`/manage-ride/${ride._id}`}
+                                className="rounded-xl bg-slate-900 px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                              >
+                                Manage Ride
+                              </Link>
+
+                              <button
+                                type="button"
+                                onClick={() => setRideToCancel(ride)}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-5 py-2.5 text-center text-sm font-semibold text-red-600 shadow-xs transition hover:bg-red-50 active:scale-[0.98]"
+                              >
+                                <X size={16} />
+                                Cancel Ride
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>
@@ -417,6 +485,55 @@ function MyRides() {
           </section>
         )}
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {rideToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <AlertTriangle size={28} />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h2 className="text-xl font-bold text-slate-900">
+                Cancel this ride?
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Are you sure you want to cancel the ride from{" "}
+                <span className="font-semibold text-slate-700">
+                  {rideToCancel.from}
+                </span>{" "}
+                to{" "}
+                <span className="font-semibold text-slate-700">
+                  {rideToCancel.to}
+                </span>
+                ? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRideToCancel(null)}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Keep Ride
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCancelRide}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 disabled:bg-red-400"
+              >
+                {cancelLoading ? "Cancelling..." : "Cancel Ride"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

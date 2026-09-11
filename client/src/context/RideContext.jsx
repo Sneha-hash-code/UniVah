@@ -170,6 +170,120 @@ export function RideProvider({ children }) {
     }
   }, []);
 
+  // Driver marks a ride as completed
+  const completeRide = useCallback(async (rideId) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Please log in to complete this ride");
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/rides/${rideId}/complete`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to complete ride"
+        );
+      }
+
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Driver cancels a ride
+  const cancelRide = useCallback(async (rideId) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Please log in to cancel this ride");
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/rides/${rideId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: "Cancelled",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to cancel ride"
+        );
+      }
+
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Driver updates ride status (Completed / Cancelled)
+  const updateRideStatus = useCallback(async (rideId, status) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("Please log in to update ride status");
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/rides/${rideId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to update ride status"
+        );
+      }
+
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return (
     <RideContext.Provider
       value={{
@@ -178,6 +292,9 @@ export function RideProvider({ children }) {
         getRideRequests,
         getMyRideRequests,
         updateRequestStatus,
+        completeRide,
+        cancelRide,
+        updateRideStatus,
         loading,
       }}
     >

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { API_URL } from "../config/api";
 
 function MyRides() {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -44,12 +45,12 @@ function MyRides() {
 
       // Fetch driver rides & passenger requests in parallel
       const [ridesRes, requestsRes] = await Promise.allSettled([
-        fetch("http://localhost:5000/api/rides/my-rides", {
+        fetch(`${API_URL}/api/rides/my-rides`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }),
-        fetch("http://localhost:5000/api/ride-requests/my", {
+        fetch(`${API_URL}/api/ride-requests/my`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -111,7 +112,7 @@ function MyRides() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/rides/${rideToCancel._id}/status`,
+        `${API_URL}/api/rides/${rideToCancel._id}/status`,
         {
           method: "PATCH",
           headers: {

@@ -5,6 +5,8 @@ import {
   useState,
 } from "react";
 
+import { API_URL } from "../config/api";
+
 const RideContext = createContext();
 
 export function RideProvider({ children }) {
@@ -27,7 +29,7 @@ export function RideProvider({ children }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/ride-requests",
+        `${API_URL}/api/ride-requests`,
         {
           method: "POST",
           headers: {
@@ -68,7 +70,7 @@ export function RideProvider({ children }) {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/ride-requests/ride/${rideId}`,
+      `${API_URL}/api/ride-requests/ride/${rideId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,7 +100,7 @@ export function RideProvider({ children }) {
     }
 
     const response = await fetch(
-      "http://localhost:5000/api/ride-requests/my",
+      `${API_URL}/api/ride-requests/my`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -134,7 +136,7 @@ export function RideProvider({ children }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/ride-requests/${requestId}/status`,
+        `${API_URL}/api/ride-requests/${requestId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -182,7 +184,7 @@ export function RideProvider({ children }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rides/${rideId}/complete`,
+        `${API_URL}/api/rides/${rideId}/complete`,
         {
           method: "PATCH",
           headers: {
@@ -218,7 +220,7 @@ export function RideProvider({ children }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rides/${rideId}/status`,
+        `${API_URL}/api/rides/${rideId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -257,7 +259,7 @@ export function RideProvider({ children }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/rides/${rideId}/status`,
+        `${API_URL}/api/rides/${rideId}/status`,
         {
           method: "PATCH",
           headers: {

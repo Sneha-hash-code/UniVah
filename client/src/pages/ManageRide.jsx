@@ -16,6 +16,8 @@ import { Link, useParams } from "react-router-dom";
 
 import { useRide } from "../context/RideContext";
 
+import { API_URL } from "../config/api";
+
 function ManageRide() {
   const params = useParams();
   const rideId = params.rideId || params.id;
@@ -59,7 +61,7 @@ function ManageRide() {
 
         // Fetch the actual ride
         const rideResponse = await fetch(
-          `http://localhost:5000/api/rides/${rideId}`,
+          `${API_URL}/api/rides/${rideId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -119,7 +121,7 @@ function ManageRide() {
       } else {
         const token = localStorage.getItem("token");
         const response = await fetch(
-          `http://localhost:5000/api/rides/${rideId}/complete`,
+          `${API_URL}/api/rides/${rideId}/complete`,
           {
             method: "PATCH",
             headers: {
@@ -164,7 +166,7 @@ function ManageRide() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/rides/${rideId}/status`,
+        `${API_URL}/api/rides/${rideId}/status`,
         {
           method: "PATCH",
           headers: {

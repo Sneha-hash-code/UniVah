@@ -14,6 +14,8 @@ import RideCard from "../components/rides/RideCard";
 import RideMap from "../components/rides/RideMap";
 import { locations } from "../data/locations";
 
+import { API_URL } from "../config/api";
+
 function FindRide() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +58,7 @@ function FindRide() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:5000/api/rides"
+          `${API_URL}/api/rides`
         );
 
         const data = await response.json();

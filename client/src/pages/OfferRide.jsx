@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import RideMap from "../components/rides/RideMap";
+import { API_URL } from "../config/api";
 
 function OfferRide() {
   const [formData, setFormData] = useState({
@@ -45,7 +46,7 @@ function OfferRide() {
         throw new Error("Please log in to publish a ride.");
       }
 
-      const response = await fetch("http://localhost:5000/api/rides", {
+      const response = await fetch(`${API_URL}/api/rides`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +73,9 @@ function OfferRide() {
       setPublishedRide(data.ride);
     } catch (err) {
       console.error("Publish ride error:", err);
-      setError(err.message || "Something went wrong while publishing your ride.");
+      setError(
+        err.message || "Something went wrong while publishing your ride.",
+      );
     } finally {
       setLoading(false);
     }
@@ -82,9 +85,7 @@ function OfferRide() {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center">
-
           <div className="w-full rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-10">
-
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
               <Car size={38} className="text-green-600" />
             </div>
@@ -99,7 +100,8 @@ function OfferRide() {
 
             <div className="mt-7 rounded-2xl bg-slate-50 p-5 text-left">
               <p className="font-semibold text-slate-900">
-                {publishedRide.from || formData.from} → {publishedRide.to || formData.to}
+                {publishedRide.from || formData.from} →{" "}
+                {publishedRide.to || formData.to}
               </p>
 
               <p className="mt-2 text-sm text-slate-500">
@@ -126,7 +128,6 @@ function OfferRide() {
                 My Rides
               </Link>
             </div>
-
           </div>
         </div>
       </main>
@@ -136,7 +137,6 @@ function OfferRide() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:py-12">
       <div className="mx-auto max-w-4xl">
-
         {/* Header */}
         <div className="mb-8">
           <p className="text-sm font-semibold text-blue-600">
@@ -148,8 +148,8 @@ function OfferRide() {
           </h1>
 
           <p className="mt-3 max-w-2xl leading-7 text-slate-600">
-            Share your journey with people heading the same way and help
-            make travel around Ruston more convenient and affordable.
+            Share your journey with people heading the same way and help make
+            travel around Ruston more convenient and affordable.
           </p>
         </div>
 
@@ -160,12 +160,9 @@ function OfferRide() {
         >
           {/* Route */}
           <section>
-            <h2 className="text-lg font-bold text-slate-900">
-              Your Route
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900">Your Route</h2>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
-
               {/* From */}
               <div>
                 <label
@@ -221,23 +218,20 @@ function OfferRide() {
                   />
                 </div>
               </div>
-
             </div>
           </section>
 
           <section className="mt-8">
-  <h2 className="text-lg font-bold text-slate-900">
-    Route Preview
-  </h2>
+            <h2 className="text-lg font-bold text-slate-900">Route Preview</h2>
 
-  <p className="mt-2 text-sm text-slate-500">
-    Your route will appear here before you publish the ride.
-  </p>
+            <p className="mt-2 text-sm text-slate-500">
+              Your route will appear here before you publish the ride.
+            </p>
 
-  <div className="mt-5">
-    <RideMap />
-  </div>
-</section>
+            <div className="mt-5">
+              <RideMap />
+            </div>
+          </section>
 
           {/* Date & Time */}
           <section className="mt-8">
@@ -246,7 +240,6 @@ function OfferRide() {
             </h2>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
-
               {/* Date */}
               <div>
                 <label
@@ -300,18 +293,14 @@ function OfferRide() {
                   />
                 </div>
               </div>
-
             </div>
           </section>
 
           {/* Seats & Price */}
           <section className="mt-8">
-            <h2 className="text-lg font-bold text-slate-900">
-              Ride Details
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900">Ride Details</h2>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
-
               {/* Seats */}
               <div>
                 <label
@@ -373,15 +362,12 @@ function OfferRide() {
                   />
                 </div>
               </div>
-
             </div>
           </section>
 
           {/* Vehicle */}
           <section className="mt-8">
-            <h2 className="text-lg font-bold text-slate-900">
-              Vehicle
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900">Vehicle</h2>
 
             <div className="mt-5">
               <label
@@ -449,7 +435,6 @@ function OfferRide() {
             </p>
           </div>
         </form>
-
       </div>
     </main>
   );

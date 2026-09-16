@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Input from "../components/common/Input";
 
+import { API_URL } from "../config/api";
+
 function Login() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
@@ -29,7 +31,7 @@ function Login() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {

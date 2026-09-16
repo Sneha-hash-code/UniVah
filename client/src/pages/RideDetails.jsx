@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useRide } from "../context/RideContext";
 import { useAuth } from "../context/AuthContext";
 
+import { API_URL } from "../config/api";
+
 import {
   AlertTriangle,
   ArrowLeft,
@@ -46,7 +48,7 @@ function RideDetails() {
         setError("");
 
         const response = await fetch(
-          `http://localhost:5000/api/rides/${id}`
+          `${API_URL}/api/rides/${id}`
         );
 
         const data = await response.json();
@@ -110,7 +112,7 @@ function RideDetails() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/rides/${id}/status`,
+        `${API_URL}/api/rides/${id}/status`,
         {
           method: "PATCH",
           headers: {

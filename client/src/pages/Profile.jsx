@@ -142,7 +142,9 @@ function Profile() {
               </div>
             </div>
             <p className="mt-3 text-2xl font-bold text-slate-900">
-              {isDriver ? "12" : "8"}
+              {isDriver
+  ? user?.stats?.ridesPublished ?? 0
+  : user?.stats?.ridesTaken ?? 0}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Active in Ruston area
@@ -152,18 +154,22 @@ function Profile() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Rating
+                Rating 
               </span>
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                 <Star size={18} className="fill-amber-500" />
               </div>
             </div>
             <p className="mt-3 text-2xl font-bold text-slate-900">
-              4.9 / 5.0
+             {user?.stats?.rating
+  ? `${user.stats.rating} / 5.0`
+  : "No ratings yet"}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Based on community reviews
-            </p>
+  {user?.stats?.rating
+    ? "Based on community reviews"
+    : "No reviews yet"}
+</p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -176,7 +182,9 @@ function Profile() {
               </div>
             </div>
             <p className="mt-3 text-2xl font-bold text-slate-900">
-              {isDriver ? "24 passengers" : "15 trips"}
+              {isDriver
+  ? `${user?.stats?.passengers ?? 0} passengers`
+  : `${user?.stats?.ridesTaken ?? 0} trips`}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Eco-friendly journeys

@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Ride = require("../models/Ride");
+const RideRequest = require("../models/RideRequest");
 
 const registerUser = async (req, res) => {
   try {
@@ -119,15 +121,47 @@ const getCurrentUser = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-      },
+    let stats = {
+  ridesPublished: 0,
+  ridesTaken: 0,
+  passengers: 0,
+  rating: null,
+};
+
+if (user.role === "driver") {
+  stats.ridesPublished = await Ride.countDocuments({
+    driver: user._id,
+  });
+
+  const driverRides = await Ride.find({
+    driver: user._id,
+  }).select("_id");
+
+  const rideIds = driverRides.map((ride) => ride._id);
+
+  if (rideIds.length > 0) {
+    stats.passengers = await RideRequest.countDocuments({
+      ride: { $in: rideIds },
+      status: "Accepted",
     });
+  }
+} else {
+  stats.ridesTaken = await RideRequest.countDocuments({
+    passenger: user._id,
+    status: "Accepted",
+  });
+}
+
+    res.status(200).json({
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    stats,
+  },
+});
   } catch (error) {
     console.error("Get current user error:", error);
 
